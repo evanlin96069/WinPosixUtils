@@ -1,0 +1,11 @@
+---
+BasedOnStyle: Google
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: 'false'
+BreakBeforeBraces: Attach
+IndentWidth: '4'
+PointerAlignment: Left
+UseTab: Never
+SortIncludes: 'false'
+
+...
