@@ -61,11 +61,15 @@ int wmain(int argc, wchar_t* argv[]) {
                 continue;
         } else {
             handle = CreateFileW(*argv, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-                                 FILE_ATTRIBUTE_NORMAL, NULL);
+                                 FILE_FLAG_BACKUP_SEMANTICS, NULL);
         }
 
         if (handle == INVALID_HANDLE_VALUE) {
-            fwprintf(stderr, L"cannot touch file -- '%s'\n", *argv);
+            WCHAR err[256] = {0};
+            FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err, 255,
+                           NULL);
+            fwprintf(stderr, L"cannot touch file -- '%s': %s", *argv, err);
             continue;
         }
 
@@ -140,9 +144,13 @@ err:
 
 void stime_file(WCHAR* fname, FILETIME* ft) {
     HANDLE handle = CreateFileW(fname, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-                                FILE_ATTRIBUTE_NORMAL, NULL);
+                                FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (handle == INVALID_HANDLE_VALUE) {
-        fwprintf(stderr, L"failed to get attributes of '%s'\n", fname);
+        WCHAR err[256] = {0};
+        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err, 255,
+                       NULL);
+        fwprintf(stderr, L"failed to get attributes of '%s': %s", fname, err);
         exit(1);
     }
     GetFileTime(handle, NULL, &ft[0], &ft[1]);
