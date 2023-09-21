@@ -123,8 +123,10 @@ void stime_arg(WCHAR* arg, FILETIME* ft) {
             goto err;
     }
 
-    TzSpecificLocalTimeToSystemTime(NULL, &t, &t);
-    SystemTimeToFileTime(&t, &ft[0]);
+    if (TzSpecificLocalTimeToSystemTime(NULL, &t, &t) == 0 ||
+        SystemTimeToFileTime(&t, &ft[0]) == 0)
+        goto err;
+
     ft[1] = ft[0];
 
     return;
