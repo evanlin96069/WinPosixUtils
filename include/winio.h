@@ -16,19 +16,22 @@ static inline DWORD wstrlen(const WCHAR* str) {
     return len;
 }
 
+#define BUFMAX 1024
 static void io_write(DWORD fd, const WCHAR* buf, DWORD len) {
-    static HANDLE hStdout = INVALID_HANDLE_VALUE;
-    static HANDLE hStderr = INVALID_HANDLE_VALUE;
     DWORD tmp;
-    if (hStdout == INVALID_HANDLE_VALUE)
-        hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hStderr == INVALID_HANDLE_VALUE)
-        hStderr = GetStdHandle(STD_ERROR_HANDLE);
+    HANDLE handle =
+        GetStdHandle(fd == STDOUT ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
+    if (GetConsoleMode(handle, &tmp)) {
+        WriteConsoleW(handle, buf, len, &tmp, 0);
+        return;
+    }
 
-    if (fd == STDOUT)
-        WriteConsoleW(hStdout, buf, len, &tmp, 0);
-    else if (fd == STDERR)
-        WriteConsoleW(hStdout, buf, len, &tmp, 0);
+    // GetConsoleMode might fail when redirecting to a file.
+    char u8[BUFMAX + 1];
+    u8[BUFMAX] = '\0';
+    int ulen =
+        WideCharToMultiByte(CP_UTF8, 0, buf, len, u8, BUFMAX, NULL, NULL);
+    WriteFile(handle, u8, ulen, &tmp, 0);
 }
 
 static inline void io_putc(DWORD fd, WCHAR c) { io_write(fd, &c, 1); }
